@@ -2,8 +2,7 @@
 #include <string>
 #include <cstring>
 #include <cstdio>
-
-#include <unistd.h>
+#include <list>
 
 // Use: debug-export <input-file> <output-file>
 int main(int argc, char** argv) {
@@ -18,6 +17,17 @@ int main(int argc, char** argv) {
 
     FILE* out_file = fopen(argv[2], "wb");
 
+    struct record {
+        uint64_t address;
+        uint32_t line_num;
+        std::string name;
+
+        bool operator<(const record& other) {
+            return address < other.address;
+        }
+    };
+    std::list<record> records;
+
     char line_buffer[1024];
     while(fgets(line_buffer, sizeof(line_buffer), prog_out) != 0) {
         if(line_buffer[strlen(line_buffer)-2] == ':' || line_buffer[0] == '\n' || !strncmp(line_buffer, "File name", 9) || !strncmp(line_buffer, "Contents", 8)) continue;
@@ -26,9 +36,18 @@ int main(int argc, char** argv) {
         uint64_t address;
 
         sscanf(line_buffer, "%s %d 0x%lx", name_buffer, &line_num, &address);
-        fwrite(&address, sizeof(uint64_t), 1, out_file);
-        fwrite(&line_num, sizeof(uint32_t), 1, out_file);
-        fwrite(name_buffer, sizeof(char), strlen(name_buffer)+1, out_file);
+        records.push_back({
+            address,
+            line_num,
+            name_buffer
+        });
+    }
+
+    records.sort();
+    for(auto& r : records) {
+        fwrite(&r.address, sizeof(uint64_t), 1, out_file);
+        fwrite(&r.line_num, sizeof(uint32_t), 1, out_file);
+        fwrite(r.name.c_str(), sizeof(char), r.name.length()+1, out_file);
     }
 
     fclose(out_file);
