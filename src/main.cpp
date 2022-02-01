@@ -6,10 +6,7 @@
 #include <unistd.h>
 
 // Use: debug-export <input-file> <output-file>
-char* args[] = { "debug-exporter", "debug-exporter", "debug-exporter.map", 0 };
 int main(int argc, char** argv) {
-    argc = 3;
-    argv = args;
     if(argc < 3) return 1;
     std::string cmd = "readelf --debug-dump=decodedline ";
     cmd += argv[1];
