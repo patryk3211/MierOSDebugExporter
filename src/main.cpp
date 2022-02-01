@@ -50,6 +50,9 @@ int main(int argc, char** argv) {
         fwrite(r.name.c_str(), sizeof(char), r.name.length()+1, out_file);
     }
 
+    // Terminating entry
+    fwrite("\0\0\0\0\0\0\0\0\0\0\0\0\0", 1, 13, out_file);
+
     fclose(out_file);
     pclose(prog_out);
     return 0;
